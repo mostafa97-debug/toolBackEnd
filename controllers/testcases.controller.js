@@ -6,7 +6,19 @@ import pool from '../config/db.js';
 export const getTestCasesForUser = async (req, res) => {
   try {
     const userId = req.user.id;
-    const projectId = req.query.projectId; // optional
+    const projectId = req.query.projectId;
+
+    // If a specific projectId is provided, check if it exists
+    if (projectId) {
+      const [projectExistsRows] = await pool.execute(
+        `SELECT 1 FROM project WHERE Project_ID = ?`,
+        [projectId]
+      );
+
+      if (projectExistsRows.length === 0) {
+        return res.status(404).json({ message: 'Project not found.' });
+      }
+    }
 
     const [rows] = await pool.execute(
       `
@@ -35,6 +47,20 @@ export const getTestCasesForUser = async (req, res) => {
       `,
       projectId ? [userId, projectId] : [userId]
     );
+
+    if (rows.length === 0) {
+      // Check if user has access to any projects
+      const [projectRows] = await pool.execute(
+        `SELECT p.Project_ID FROM project p JOIN user_projects up ON p.Project_ID = up.Project_ID WHERE up.User_ID = ?`,
+        [userId]
+      );
+
+      if (projectRows.length === 0) {
+        return res.status(403).json({ message: 'User does not have access to any projects.' });
+      } else {
+        return res.status(404).json({ message: 'No test cases found for the selected project.' });
+      }
+    }
 
     const testCaseMap = {};
 
