@@ -8,6 +8,10 @@ export const getTestCasesForUser = async (req, res) => {
     const userId = req.user.id;
     const projectId = req.query.projectId;
 
+    if (!projectId) {
+      return res.status(400).json({ error: 'projectId is required as a query parameter' });
+    }
+
     // If a specific projectId is provided, check if it exists
     if (projectId) {
       const [projectExistsRows] = await pool.execute(
