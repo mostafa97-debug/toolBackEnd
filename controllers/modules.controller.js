@@ -31,6 +31,10 @@ export const getModulesByProject = async (req, res) => {
       [projectId]
     );
 
+    
+  if (modules.length === 0) {
+    return res.status(404).json({ message: 'No modules found for this project.' });
+  }
     res.json(modules);
 
   } catch (err) {

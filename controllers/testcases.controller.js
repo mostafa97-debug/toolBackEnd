@@ -55,16 +55,15 @@ export const getTestCasesForUser = async (req, res) => {
     if (rows.length === 0) {
       // Check if user has access to any projects
       const [projectRows] = await pool.execute(
-        `SELECT p.Project_ID FROM project p JOIN user_projects up ON p.Project_ID = up.Project_ID WHERE up.User_ID = ?`,
-        [userId]
+        `SELECT p.Project_ID FROM project p JOIN user_projects up ON p.Project_ID = up.Project_ID WHERE up.User_ID = ? and up.Project_ID = ?`,
+        [userId, projectId]
       );
 
       if (projectRows.length === 0) {
-        return res.status(403).json({ message: 'User does not have access to any projects.' });
-      } else {
-        return res.status(404).json({ message: 'No test cases found for the selected project.' });
-      }
+        return res.status(403).json({ message: 'User does not have access to this specifed project.' });
     }
+  }
+
 
     const testCaseMap = {};
 
